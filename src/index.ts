@@ -1,8 +1,10 @@
 import { Logger, LoggerOptions, LogLevels } from "./lib/Logger";
 import { isFormattableString } from "./lib/util";
 
-export type LogInstance = Function & {
-  [P in LogLevels]: (...args:Parameters<typeof console.log>)=>any;
+type LoggerFn = (...args:Parameters<typeof console.log>)=>any
+
+export type LogInstance = LoggerFn & {
+  [P in LogLevels]: LoggerFn;
 } & { logger: Logger };
 
 function createLogger(options:LoggerOptions) {
