@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { stripColors } from 'colors/safe';
-import { StandardTransport } from '../lib/Logger';
+import { LogLevels, Logger, StandardTransport } from '../lib/Logger';
 
 export default class FileTransport implements StandardTransport {
 
@@ -30,26 +30,26 @@ export default class FileTransport implements StandardTransport {
       this.error = fs.createWriteStream(errorPath as string, { flags: 'a' });
     }
     catch (err) {
-      err.message = 'FileTransport is unable to open log files for writing. ' + err.message;
+      (err as any).message = 'FileTransport is unable to open log files for writing. ' + (err as any).message;
       throw err;
     }
 
   }
 
-  internalWrite(stream, message) {
+  internalWrite(stream:fs.WriteStream, message:string) {
     try {
       message = stripColors(message);
       if (!Buffer.isBuffer(message)) {
-        message = Buffer.from(message, 'utf8');
-        this.delayed ? process.nextTick(() => stream.write(message)) : stream.write(message);
+        const buffer = Buffer.from(message, 'utf8');
+        this.delayed ? process.nextTick(() => stream.write(buffer)) : stream.write(buffer);
       }
     }
     catch (err) {
-      process.stderr.write(err.toString());
+      process.stderr.write((err as any).message.toString());
     }
   }
 
-  public write(message, level, logger) {
+  public write(message:string, level:LogLevels, logger:Logger) {
     if (logger.isError(level)) {
       this.internalWrite(this.error, message);
     }

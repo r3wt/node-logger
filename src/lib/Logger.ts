@@ -45,7 +45,7 @@ const defaults:LoggerOptions = {
 let isDebug = false;
 const debug = (m:string) => isDebug && process.stdout.write(m+"\n")
 
-export default class Logger {
+export class Logger {
   private options:LoggerOptions;
   public levels:Record<LogLevels,LogLevelsColors>={
     emerg:'red',
@@ -57,7 +57,7 @@ export default class Logger {
     info:'cyan',
     debug:'cyan'
   };
-  private transports:(CustomTransport|StandardTransport)[];
+  private transports:(CustomTransport|StandardTransport)[]=[];
 
   constructor(_options:Partial<LoggerOptions> = {}) {
     if (typeof _options !== 'object') {
@@ -69,7 +69,7 @@ export default class Logger {
   }
 
   private getIndex(k:LogLevels):number {
-    return LogLevel[this.levels[k]];
+    return LogLevel[k];
   }
 
   public setLevel(new_level:LogLevels) {
@@ -89,7 +89,7 @@ export default class Logger {
           return transport === 'file' ? new FileTransport() : new ConsoleTransport();
         }
         catch (err) {
-          debug(err);
+          debug((err as any).message);
           throw new Error('Unknown built-in transport named `' + transport + '`. ');
         }
       }
@@ -108,7 +108,7 @@ export default class Logger {
     })
   }
 
-  isError(level) {
+  isError(level:LogLevels) {
     return ['emerg', 'alert', 'crit', 'error'].indexOf(level) !== -1;//tells if a log level is one of the 4 error levels
   }
 
@@ -120,8 +120,8 @@ export default class Logger {
     this.transports.forEach(transport => transport.hasOwnProperty('writeCustom') ? (transport as CustomTransport).writeCustom(args, level, date, this) : (transport as StandardTransport).write(text, level, this));
   }
 
-  format(level:LogLevels, date:Date, message) {
-    return [colors[this.levels[this.getIndex(level)]](pad(level, 7)), ' [', this.options.formatDate(date), '] ', message].join('');
+  format(level:LogLevels, date:Date, message:string) {
+    return [(colors as any)?.[this.levels[level]](pad(level, 7)), ' [', this.options.formatDate(date), '] ', message].join('');
   }
 
   log( log_level: LogLevels, message?:any, ...optionalParams:any[] ):string|void;

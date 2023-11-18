@@ -1,4 +1,4 @@
-import { StandardTransport } from "../lib/Logger";
+import { StandardTransport, LogLevels, Logger } from "../lib/Logger";
 
 export default class ConsoleTransport implements StandardTransport {
 
@@ -8,7 +8,7 @@ export default class ConsoleTransport implements StandardTransport {
     this.delayed = options?.nextTick ?? false;
   }
 
-  public write(message, level, logger) {
+  public write(message:string, level:LogLevels, logger: Logger ) {
     const stream = logger.isError(level) ? 'stderr' : 'stdout';
     if (this.delayed) {
       process.nextTick(() => process[stream].write(message));

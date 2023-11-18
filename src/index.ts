@@ -1,15 +1,19 @@
-import Logger,{LoggerOptions} from "./lib/Logger";
+import { Logger, LoggerOptions, LogLevels } from "./lib/Logger";
 import { isFormattableString } from "./lib/util";
+
+export type LogInstance = Function & {
+  [P in LogLevels]: (...args:Parameters<typeof console.log>)=>any;
+} & { logger: Logger };
 
 function createLogger(options:LoggerOptions) {
   const logger = new Logger(options);
-  const log = (...args:Parameters<typeof console.log>) => {
+  const log:any = (...args:Parameters<typeof console.log>) => {
       logger.log('info',...args);
   };
   Object.keys(logger.levels)
-    .forEach(level=>log[level] = (...args:Parameters<typeof console.log>) => logger.log(level,...args));
+    .forEach((level)=>log[level] = (...args:Parameters<typeof console.log>) => logger.log(level,...args));
   log.logger = logger;
-  return log;  
+  return log as LogInstance;  
 }
 
 type ConsoleShim = Partial<Pick<typeof console,'log'|'warn'|'error'|'info'>> & { isWrapped: boolean };
@@ -18,7 +22,7 @@ var shim:ConsoleShim = {
   isWrapped: false
 };
 
-function wrapConsole( logger ) {
+function wrapConsole( logger: LogInstance ) {
   if(!shim.isWrapped) {
       var c = global.console;
       shim.log = c.log;
